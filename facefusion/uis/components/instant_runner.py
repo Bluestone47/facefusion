@@ -1,3 +1,4 @@
+import os
 from time import sleep
 from typing import Optional, Tuple
 
@@ -5,13 +6,13 @@ import gradio
 
 from facefusion import process_manager, state_manager, translator
 from facefusion.args import collect_step_args
+from facefusion.common_helper import get_first
 from facefusion.core import process_step
-from facefusion.filesystem import is_directory, is_image, is_video
+from facefusion.filesystem import get_file_extension, get_file_name, is_directory, is_file, is_image, is_video
 from facefusion.jobs import job_helper, job_manager, job_runner, job_store
 from facefusion.temp_helper import clear_temp_directory
 from facefusion.types import Args, UiWorkflow
 from facefusion.uis.core import get_ui_component
-from facefusion.uis.ui_helper import suggest_output_path
 
 INSTANT_RUNNER_WRAPPER : Optional[gradio.Row] = None
 INSTANT_RUNNER_MIDDLE_WRAPPER : Optional[gradio.Row] = None
@@ -114,9 +115,10 @@ def start() -> Tuple[gradio.Button, gradio.Button, gradio.Button, gradio.Button]
 def run() -> Tuple[gradio.Button, gradio.Button, gradio.Button, gradio.Button, gradio.Image, gradio.Video]:
 	step_args = collect_step_args()
 	output_path = step_args.get('output_path')
+	hardcoded_output_path = suggest_hardcoded_output_path(output_path)
 
-	if is_directory(step_args.get('output_path')):
-		step_args['output_path'] = suggest_output_path(step_args.get('output_path'), state_manager.get_item('target_path'))
+	if hardcoded_output_path:
+		step_args['output_path'] = hardcoded_output_path
 	if job_manager.init_jobs(state_manager.get_item('jobs_path')):
 		create_and_run_job(step_args)
 		state_manager.set_item('output_path', output_path)
@@ -125,6 +127,32 @@ def run() -> Tuple[gradio.Button, gradio.Button, gradio.Button, gradio.Button, g
 	if is_video(step_args.get('output_path')):
 		return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None, visible = False), gradio.Video(value = step_args.get('output_path'), visible = True)
 	return gradio.Button(visible = True), gradio.Button(visible = False), gradio.Button(visible = True), gradio.Button(visible = False), gradio.Image(value = None), gradio.Video(value = None)
+
+
+def suggest_hardcoded_output_path(output_path : str) -> Optional[str]:
+	target_path = state_manager.get_item('target_path')
+	source_paths = state_manager.get_item('source_paths')
+	target_name = get_file_name(target_path) or 'target'
+	target_extension = get_file_extension(target_path) or ''
+	source_name = get_file_name(get_first(source_paths)) or 'source'
+
+	if is_directory(output_path):
+		output_directory_path = output_path
+	else:
+		output_directory_path = os.path.dirname(output_path)
+
+	if not is_directory(output_directory_path):
+		return None
+
+	index = 0
+
+	while True:
+		file_name = source_name + '-' + target_name + '-' + str(index) + target_extension
+		next_output_path = os.path.join(output_directory_path, file_name)
+
+		if not is_file(next_output_path):
+			return next_output_path
+		index += 1
 
 
 def create_and_run_job(step_args : Args) -> bool:
