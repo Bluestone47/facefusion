@@ -36,7 +36,8 @@ def render() -> None:
 	SOURCE_IMAGE = gradio.Image(
 		value = source_image_path if has_source_image else None,
 		visible = has_source_image,
-		show_label = False
+		show_label = False,
+		elem_classes = [ 'preview-media' ]
 	)
 	register_ui_component('source_audio', SOURCE_AUDIO)
 	register_ui_component('source_image', SOURCE_IMAGE)

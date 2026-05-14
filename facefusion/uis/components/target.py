@@ -27,12 +27,14 @@ def render() -> None:
 	target_image_options : ComponentOptions =\
 	{
 		'show_label': False,
-		'visible': False
+		'visible': False,
+		'elem_classes': [ 'preview-media' ]
 	}
 	target_video_options : ComponentOptions =\
 	{
 		'show_label': False,
-		'visible': False
+		'visible': False,
+		'elem_classes': [ 'preview-media' ]
 	}
 	if is_target_image:
 		target_image_options['value'] = TARGET_FILE.value.get('path')

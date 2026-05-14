@@ -154,6 +154,18 @@
 	z-index: 100;
 }
 
+:root:root:root:root .preview-media
+{
+	max-height: 300px;
+	overflow: hidden;
+}
+
+:root:root:root:root .preview-media .image-container,
+:root:root:root:root .preview-media .video-container
+{
+	max-height: 300px;
+}
+
 :root:root:root:root .block .error
 {
 	border: 0.125rem solid;
