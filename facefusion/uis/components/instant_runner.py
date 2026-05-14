@@ -147,7 +147,7 @@ def suggest_hardcoded_output_path(output_path : str) -> Optional[str]:
 	index = 0
 
 	while True:
-		file_name = source_name + '-' + target_name + '-' + str(index) + target_extension
+		file_name = source_name + '-' + target_name + target_extension
 		next_output_path = os.path.join(output_directory_path, file_name)
 
 		if not is_file(next_output_path):
